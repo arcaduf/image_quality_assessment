@@ -51,3 +51,5 @@ Go inside the folder "data/" and unzip the test dataset: `unzip dataset.zip`.
 
 Then, inside the folder "tests/" try to run one by one the test scripts.
 
+When a plot is produced during the execution of a test, the script is halted until
+the plot window is manually closed.

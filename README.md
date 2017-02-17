@@ -47,5 +47,6 @@ The following routines to construct simulated datasets are included:
 
 
 ##  Test the package
-Go inside the folder "tests/" and try to run one by one the test scripts.
+Go inside the folder "data/" and unzip the test dataset: `unzip dataset.zip`.
+Then, inside the folder "tests/" try to run one by one the test scripts.
 

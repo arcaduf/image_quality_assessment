@@ -47,41 +47,41 @@ from __future__ import division,print_function
 import argparse
 import sys
 import os
-import glob
 import numpy as np
-import math
-import scipy
-from scipy import interpolate
+from scipy import interpolate 
 from scipy import optimize
-import myImageIO as io
-import myPrint
 import datetime 
-#import progressbar 
 from time import sleep
-import myImageDisplay as dis
-import myImageProcess as proc
-import myPrint as pp
+
+
+
+
+####  MY MODULES
+sys.path.append( '../common/' )
+import my_image_io as io
+import my_image_display as dis
+import my_image_process as proc
+import my_print as pp
 
 
 
 
 ####  PLOTTING PYTHON MODULES
 import matplotlib.pyplot as plt
-from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 from matplotlib.font_manager import FontProperties
-from matplotlib import rc, rcParams
-from matplotlib import cm
-import myImageDisplay as dis
 
 
 
 
 ####  MY VARIABLE TYPE
-myint=int
-myfloat = np.float32
-myfloat2 = np.float64
+myint     = np.int
+myfloat   = np.float32
+myfloat2  = np.float64
 mycomplex = np.complex64
-polynomial_degree = 10
+
+
+
+####  CONSTANTS
 eps = 1e-1
 
 
@@ -121,7 +121,10 @@ def getArgs():
                         + ' e.g.: -l EST:GRIDREC:IFBPTV')
 
     parser.add_argument('-p', dest='plot', action='store_true',
-                        help='Display check plot') 
+                        help='Display check plot')
+    
+    parser.add_argument('-d', dest='polynom_degree', type=myint, default=20,
+                        help='Set polynomial degree to fit FRC curve')     
 
     args = parser.parse_args()
     
@@ -236,7 +239,6 @@ def plot_frc_curves( curve_list , x , args , pathout , prefix , title ,
     font1.set_size( 'large' )
     font = font1.copy()
     font.set_family( 'serif' )
-    rc( 'text' , usetex=True )
 
 
     
@@ -259,12 +261,12 @@ def plot_frc_curves( curve_list , x , args , pathout , prefix , title ,
     
     ##  Axis labelling
     fig.autofmt_xdate(bottom=0.18)
-    plt.xticks(fontsize=16)
-    plt.yticks(fontsize=16)
-    xlabel = r'\textbf{r}'
-    ylabel = r'\textbf{FRC}'
-    plt.xlabel( xlabel , fontsize=18 , position=(0.5,-0.2) )
-    plt.ylabel( ylabel , fontsize=18 , position=(0.5,0.5) )
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+    xlabel = 'Radius'
+    ylabel = 'FRC'
+    plt.xlabel( xlabel , fontsize=12 , position=(0.5,-0.2) )
+    plt.ylabel( ylabel , fontsize=12 , position=(0.5,0.5) )
 
 
     
@@ -281,7 +283,7 @@ def plot_frc_curves( curve_list , x , args , pathout , prefix , title ,
     if mode == 'single':
         y = curve_list
         #plt.plot( x , y , marker_array[0] , markersize=9 , color=colorArray[0] )
-        plt.plot( x , y , '-' , linewidth=6 , color='red' ) 
+        plt.plot( x , y , '-' , linewidth=3 , color='blue' ) 
 
 
     ##  2) Modality resol: FRC curve + fit of the curve + criterion curve +
@@ -290,13 +292,13 @@ def plot_frc_curves( curve_list , x , args , pathout , prefix , title ,
         y = curve_list[0]
         #plt.plot( x , y , marker_array[0] , markersize=9 , color=colorArray[0] ,
         #          label='FRC curve')
-        plt.plot( x , y , '-' , linewidth=6 , color='black' , label='FRC curve' )
+        plt.plot( x , y , '-' , linewidth=2 , color='blue' , label='FRC curve' )
 
         plt.hold( 'True' )
 
         y = curve_list[1]
         plt.plot( x , y , '-' , linewidth=3 , color='red' , 
-                  label='Polynomial fit degree ' + str( polynomial_degree ) )
+                  label='Polynomial fit degree ' + str( args.polynom_degree ) )
 
         plt.hold( 'True' )  
 
@@ -307,23 +309,22 @@ def plot_frc_curves( curve_list , x , args , pathout , prefix , title ,
             label = 'Half-bit curve'     
         elif prefix_add == '_halfheight':
             label = 'y = 0.5'     
-        plt.plot( x , y , marker_array[1] , color=colorArray[3] , markersize=7 , 
+        plt.plot( x , y , color=colorArray[3] , linewidth=2 , 
                   label=label )
 
         plt.hold( 'True' )
 
-        print( 'point: ' , point )
 
         if point is not None:
             x0 = point[0]
             y0 = point[1]
-            plt.plot( x0 , y0 , 'ro' , markersize=8 , color='blue' , label='Resolution point' )
+            plt.plot( x0 , y0 , 'ro' , markersize=3 , color='black' , label='Resolution point' )
 
             verts = [ ( x0 , 0 ) , ( x0 , y0 ) ]
             xs, ys = zip( *verts )
         
-            ax.plot( xs , ys , 'x--' , lw=5 , color='blue' , ms=10 )
-            ax.text( x0 , y0+0.05 , r'\textbf{RESOL-FREQ}' , color='blue', fontsize=15 )    
+            ax.plot( xs , ys , 'x--' , lw=2 , color='blue' , ms=2 )
+            ax.text( x0 , y0+0.05 , 'RES-FREQ' , color='black', fontsize=12 )    
 
 
     ##  3) Modality multi: 
@@ -333,7 +334,7 @@ def plot_frc_curves( curve_list , x , args , pathout , prefix , title ,
             y = curve_list[i]
             if labels is not None:  
                 plt.plot( x , y , color=colorArray[i] , label=labels[i] ,
-                          linewidth=5 )
+                          linewidth=3 )
             else:
                 plt.plot( x , y , color=colorArray[i] , linewidth=5 )    
             plt.hold( 'True' )   
@@ -373,7 +374,7 @@ def plot_frc_curves( curve_list , x , args , pathout , prefix , title ,
 ################################################################
 ################################################################ 
 
-def resolution_criterion( y1 , x , n , ff , crit ):
+def resolution_criterion( y1 , x , n , ff , crit , pd ):
     ##  Create either one-bit or half-bit curve
     if crit == 'one-bit':
         y2 = ( 0.5 + 2.4142 / np.sqrt( n ) ) / ( 1.5 + 1.4142 / np.sqrt( n ) )
@@ -386,14 +387,14 @@ def resolution_criterion( y1 , x , n , ff , crit ):
     
     ##  Find piecewise polynomial to approximate the FRC curves
     #p1 = interpolate.PiecewisePolynomial( x , y1[:,np.newaxis] )
-    coeff = np.polyfit( x , y1 , polynomial_degree )
+    coeff = np.polyfit( x , y1 , pd )
     p1 = np.poly1d( coeff )
 
 
 
     ##  Get criterion curve
     if crit == 'one-bit' or crit == 'half-bit':
-        p2 = interpolate.PiecewisePolynomial( x , y2[:,np.newaxis] )      
+        p2 = interpolate.interp1d( x , y2 , bounds_error=False )      
         
     def pdiff1(x):
         return  p1( x ) - p2( x )
@@ -425,8 +426,6 @@ def resolution_criterion( y1 , x , n , ff , crit ):
             success = 1
         else:
             success = 0
-
-    print( root, '  ', p1( root ))
 
     #if success:
     point = [ root , p1( root ) ]
@@ -520,9 +519,13 @@ def analysis_frc( image1 , image2 , args , pathout , prefix , image_name , label
     
     ##  Get thickness of the rings
     width_ring = args.width_ring
-    print('\nRing width: ', width_ring,'\n')
+    print('\nRing width: ', width_ring)
 
 
+    ##  Get polynomial degree to fit the FRC curve
+    pd = args.polynom_degree
+    print( '\nPolynomial degree to fit FRC curve: ' , pd )
+    
     ##  Calculate FRC and 2*sigma curve
     C1 = [];  C2 = [];  C3 = [];  n = []
     
@@ -572,9 +575,9 @@ def analysis_frc( image1 , image2 , args , pathout , prefix , image_name , label
 
     
     ##  Get resol point by means of the one-bit, half-bit and half-height criterion
-    point1 , index1 , p1 , y1 = resolution_criterion( FRC , spatial_freq , n , freq_nyq , 'one-bit' ) 
-    point2 , index2 , p2 , y2 = resolution_criterion( FRC , spatial_freq , n , freq_nyq , 'half-bit' )
-    point3 , index3 , p3 , y3 = resolution_criterion( FRC , spatial_freq , n , freq_nyq , 'half-height' )  
+    point1 , index1 , p1 , y1 = resolution_criterion( FRC , spatial_freq , n , freq_nyq , 'one-bit' , pd ) 
+    point2 , index2 , p2 , y2 = resolution_criterion( FRC , spatial_freq , n , freq_nyq , 'half-bit' , pd )
+    point3 , index3 , p3 , y3 = resolution_criterion( FRC , spatial_freq , n , freq_nyq , 'half-height' , pd )  
 
     
     
@@ -601,6 +604,10 @@ def analysis_frc( image1 , image2 , args , pathout , prefix , image_name , label
     resol2 = freq_nyq / myfloat( index2 )
     resol3 = freq_nyq / myfloat( index3 )
     resol = [ resol1 , resol2 , resol3 ]
+    
+    print( '\nResolution with one-bit curve: ' , resol1,' pixels' )
+    print( '\nResolution with half-bit curve: ' , resol2,' pixels' )
+    print( '\nResolution with half-height curve: ' , resol3,' pixels' )    
 
 
 
@@ -697,7 +704,7 @@ def main():
             ##  Select resolution square
             if args.resol_square is True:
                 print('Calculation enabled in the resol square')
-                image = proc.selectResolutionSquare( image )            
+                image = proc.select_resol_square( image )            
 
 
             ##  Apply hanning window

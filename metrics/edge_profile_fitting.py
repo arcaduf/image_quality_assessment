@@ -72,8 +72,7 @@ myfloat = np.float64
 
 def getArgs():
     parser = argparse.ArgumentParser(description='Calculate image resolution by'
-                                                + ' fitting line profile with the'
-                                                + ' error function',
+                                                + ' fitting an edge profile',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('-i', '--filein', dest='filein',
@@ -210,27 +209,24 @@ def plot_function( curves , n , args ):
     gridLineWidth = 0.2
     ax.yaxis.grid(True, linewidth=gridLineWidth, linestyle='-', color='0.05')  
     fig.autofmt_xdate(bottom=0.18)
-    plt.xticks(fontsize=16)
-    plt.yticks(fontsize=16)  
-    plt.xlabel(r'\textbf{Pixel index}', fontsize=18,position=(0.5,-0.2))
-    plt.ylabel( r'\textbf{Grey value}' , fontsize=18,position=(0.5,0.5))
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)  
+    plt.xlabel('Pixel index', fontsize=12,position=(0.5,-0.2))
+    plt.ylabel( 'Grey value' , fontsize=12,position=(0.5,0.5))
 
     if n == 1:
-        #plt.suptitle(r'\textbf{Input line profile}', fontsize=16, fontweight='bold',
-        #             position=(0.53,0.95))     
-        plt.plot( x , y , linewidth=4 , color='b' ) 
+        plt.title('Input line profile', fontsize=12, fontweight='bold')
+        plt.plot( x , y , linewidth=2 , color='b' ) 
     elif n == 2:
-        #plt.suptitle(r'\textbf{Line profile fitted with ERF}', fontsize=16, fontweight='bold',
-        #             position=(0.53,0.95)) 
-        plt.plot( x , y , '-' , linewidth=6 , color='black' , label='Line profile' )
+        plt.title('Line profile fitted with ERF', fontsize=12, fontweight='bold')
+        plt.plot( x , y , linewidth=2 , color='blue' , label='Line profile' )
         plt.hold( True )
-        plt.plot( x , yfit , '-' , linewidth=4 , color='r' , label='Erf fit function' )
+        plt.plot( x , yfit , linewidth=3 , color='r' , label='Erf fit function' )
         plt.legend(loc='upper right', shadow=True)
     
     if n == 2 and args.saveplots is not None:
         fileout = args.saveplots
-        #plt.savefig( fileout , facecolor=fig.get_facecolor() , edgecolor='black' )    
-        plt.savefig( fileout , facecolor=fig.get_facecolor() , #edgecolor='black' ,
+        plt.savefig( fileout , facecolor=fig.get_facecolor() , edgecolor='black' ,
                      format='eps', dpi=1000) 
 
     if args.plot is True:
@@ -316,7 +312,6 @@ def calc_resol( y , args ):
     dy = yfit[1:] - yfit[:len(yfit)-1]
     x1 = np.min( np.argwhere( dy != 0 ) ) - 1
     x2 = np.max( np.argwhere( dy != 0 ) ) + 1
-    print( x2 - x1 )
     resol = ( np.max( yfit ) - np.min( yfit ) ) / myfloat( x2 - x1 )
 
     print('\nResolution (pixels): ', resol )
@@ -347,7 +342,7 @@ def write_log_file( resol , args ):
     fp.write('\n##################################################')
     fp.write('\n##################################################') 
     fp.write('\n###                                            ###')
-    fp.write('\n###   RESOLUTION WITH ERROR FUNCTION FITTING   ###')
+    fp.write('\n###    RESOLUTION BY FITTING AN EDGE PROFILE   ###')
     fp.write('\n###                                            ###')
     fp.write('\n##################################################')
     fp.write('\n##################################################') 
@@ -398,7 +393,7 @@ def main():
     print('############################################################')  
     print('############################################################')
     print('####                                                    ####')
-    print('####       RESOLUTION WITH LINE PROFILE FITTING         ####')
+    print('####       RESOLUTION BY FITTING AN EDGE PROFILE        ####')
     print('####                                                    ####')  
     print('############################################################')  
     print('############################################################')
